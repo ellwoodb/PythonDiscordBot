@@ -15,7 +15,7 @@ class MusicBot(commands.Bot):
         for cog in self._cogs:
             self.load_extension(f"bot.cogs.{cog}")
             print(f" Loaded [{cog}] cog!")
-            
+
         print("Setup complete.")
 
     def run(self):
@@ -43,6 +43,12 @@ class MusicBot(commands.Bot):
 
     async def on_disconnect(self):
         print("Bot disconnected.")
+
+    # async def on_error(self, err, *args, **kwargs):
+    #     raise
+    #
+    # async def on_command_error(self, ctx, exc):
+    #     raise getattr(exc, "original", exc)
 
     async def on_ready(self):
         self.client_id = (await self.application_info()).id
