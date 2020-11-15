@@ -7,7 +7,8 @@ from discord.ext import commands
 class MusicBot(commands.Bot):
     def __init__(self):
         self._cogs = [p.stem for p in Path(".").glob("./bot/cogs/*.py")]
-        super().__init__(command_prefix=self.prefix, case_insensitive=True, intents=discord.Intents.all())
+        super().__init__(command_prefix=self.prefix,
+                         case_insensitive=True, intents=discord.Intents.all())
 
     def setup(self):
         print("Running setup...")
@@ -55,7 +56,7 @@ class MusicBot(commands.Bot):
         print("Bot ready.")
 
     async def prefix(self, bot, msg):
-        return commands.when_mentioned_or("+")(bot, msg)
+        return commands.when_mentioned_or("*")(bot, msg)
 
     async def process_commands(self, msg):
         ctx = await self.get_context(msg, cls=commands.Context)

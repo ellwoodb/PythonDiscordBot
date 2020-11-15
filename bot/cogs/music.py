@@ -4,6 +4,7 @@ import re
 import typing as t
 
 import discord
+from discord import player
 import wavelink
 from discord.ext import commands
 
@@ -33,6 +34,14 @@ class NoTracksFound(commands.CommandError):
     pass
 
 
+class PlayerIsAlreadyPaused(commands.CommandError):
+    pass
+
+
+class PlayerIsAlreadyPlaying(commands.CommandError):
+    pass
+
+
 class Queue:
     def __init__(self):
         self._queue = []
@@ -42,14 +51,40 @@ class Queue:
     def is_empty(self):
         return not self._queue
 
-    def add(self, *args):
-        self._queue.extend(args)
-
-    def get_first_track(self):
+    @property
+    def first_track(self):
         if not self._queue:
             raise QueueIsEmpty
 
         return self._queue[0]
+
+    @property
+    def current_track(self):
+        if not self._queue:
+            raise QueueIsEmpty
+
+        return self._queue[self.position]
+
+    @property
+    def upcoming(self):
+        if not self._queue:
+            raise QueueIsEmpty
+
+        return self._queue[self.position + 1:]
+
+    @property
+    def history(self):
+        if not self._queue:
+            raise QueueIsEmpty
+
+        return self._queue[:self.position]
+
+    @property
+    def lenght(self):
+        return len(self._queue)
+
+    def add(self, *args):
+        self._queue.extend(args)
 
     def get_next_track(self):
         if not self._queue:
@@ -61,6 +96,9 @@ class Queue:
             return None
 
         return self._queue[self.position]
+
+    def empty(self):
+        self._queue.clear()
 
 
 class Player(wavelink.Player):
@@ -92,11 +130,13 @@ class Player(wavelink.Player):
             self.queue.add(*tracks.tracks)
         elif len(tracks) == 1:
             self.queue.add(tracks[0])
-            await ctx.send(f"Added {tracks[0].title} to the queue.")
+            await ctx.message.delete()
+            await ctx.send(f"Added {tracks[0].title} to the queue.", delete_after=5)
         else:
             if (track := await self.choose_track(ctx, tracks)) is not None:
                 self.queue.add(track)
-                await ctx.send(f"Added {track.title} to the queue.")
+                await ctx.message.delete()
+                await ctx.send(f"Added {track.title} to the queue.", delete_after=5)
 
         if not self.is_playing and not self.queue.is_empty:
             await self.start_playback()
@@ -138,7 +178,7 @@ class Player(wavelink.Player):
             return tracks[OPTIONS[reaction.emoji]]
 
     async def start_playback(self):
-        await self.play(self.queue.get_first_track())
+        await self.play(self.queue.first_track)
 
     async def advance(self):
         try:
@@ -204,20 +244,24 @@ class Music(commands.Cog, wavelink.WavelinkMixin):
     async def connect_command(self, ctx, *, channel: t.Optional[discord.VoiceChannel]):
         player = self.get_player(ctx)
         channel = await player.connect(ctx, channel)
-        await ctx.send(f"Connected to {channel.name}.")
+        await ctx.message.delete()
+        await ctx.send(f"Connected to {channel.name}.", delete_after=5)
 
     @connect_command.error
     async def connect_comand_error(self, ctx, exc):
         if isinstance(exc, AlreadyConnectedToChannel):
-            await ctx.send("Allready connected to a voice channel.")
+            await ctx.message.delete()
+            await ctx.send("Allready connected to a voice channel.", delete_after=5)
         elif isinstance(exc, NoVoiceChannel):
-            await ctx.send("No suitable voice channel was provided.")
+            await ctx.message.delete()
+            await ctx.send("No suitable voice channel was provided.", delete_after=5)
 
     @commands.command(name="disconnect", aliases=["leave"])
     async def disconnect_command(self, ctx):
         player = self.get_player(ctx)
         await player.teardown()
-        await ctx.send("Disconnected.")
+        await ctx.message.delete()
+        await ctx.send("Disconnected.", delete_after=5)
 
     @commands.command(name="play")
     async def play_command(self, ctx, *, query: t.Optional[str]):
@@ -227,7 +271,15 @@ class Music(commands.Cog, wavelink.WavelinkMixin):
             await player.connect(ctx)
 
         if query is None:
-            pass
+            if not player.is_paused:
+                raise PlayerIsAlreadyPlaying
+
+            if player.queue.is_empty:
+                raise QueueIsEmpty
+
+            await player.set_pause(False)
+            await ctx.message.delete()
+            await ctx.send("Playback resumed.", delete_after=5)
 
         else:
             query = query.strip("<>")
@@ -235,6 +287,97 @@ class Music(commands.Cog, wavelink.WavelinkMixin):
                 query = f"ytsearch:{query}"
 
             await player.add_tracks(ctx, await self.wavelink.get_tracks(query))
+
+    @play_command.error
+    async def play_command_error(self, ctx, exc):
+        if isinstance(exc, PlayerIsAlreadyPlaying):
+            await ctx.send("Already playing.", delete_after=5)
+        elif isinstance(exc, QueueIsEmpty):
+            await ctx.send("No songs to play as the queue is empty.", delete_after=5)
+
+    @commands.command(name="resume")
+    async def resume_command(self, ctx):
+        player = self.get_player(ctx)
+
+        if not player.is_paused:
+            raise PlayerIsAlreadyPlaying
+
+        if player.queue.is_empty:
+            raise QueueIsEmpty
+
+        await player.set_pause(False)
+        await ctx.message.delete()
+        await ctx.send("Playback resumed.", delete_after=5)
+
+    @resume_command.error
+    async def pause_command_error(self, ctx, exc):
+        if isinstance(exc, PlayerIsAlreadyPlaying):
+            await ctx.message.delete()
+            await ctx.send("Already playing.", delete_after=5)
+
+    @commands.command(name="pause")
+    async def pause_command(self, ctx):
+        player = self.get_player(ctx)
+
+        if player.queue.is_empty:
+            raise QueueIsEmpty
+
+        if player.is_paused:
+            raise PlayerIsAlreadyPaused
+
+        await player.set_pause(True)
+        await ctx.message.delete()
+        await ctx.send("Playback paused.", delete_after=5)
+
+    @pause_command.error
+    async def pause_command_error(self, ctx, exc):
+        if isinstance(exc, PlayerIsAlreadyPaused):
+            await ctx.message.delete()
+            await ctx.send("Playback already paused.")
+        elif isinstance(exc, QueueIsEmpty):
+            await ctx.message.delete()
+            await ctx.send("Playback already paused.")
+
+    @commands.command(name="stop")
+    async def stop_command(self, ctx):
+        player = self.get_player(ctx)
+        player.queue.empty()
+        await player.stop()
+        await ctx.message.delete()
+        await ctx.send("Playback stopped and queue cleared.", delete_after=5)
+
+    @commands.command(name="queue")
+    async def queue_command(self, ctx, show: t.Optional[int] = 10):
+        player = self.get_player(ctx)
+
+        if player.queue.is_empty:
+            raise QueueIsEmpty
+
+        embed = discord.Embed(
+            title="Queue",
+            color=ctx.author.color,
+            timestamp=dt.datetime.utcnow(),
+        )
+        embed.set_author(name="Query Results")
+        embed.set_footer(
+            text=f"Requested by {ctx.author.display_name}", icon_url=ctx.author.avatar_url)
+        embed.add_field(name="Currently playing",
+                        value=player.queue.current_track.title, inline=False)
+        if upcoming := player.queue.upcoming:
+            embed.add_field(
+                name="Next up",
+                value="\n".join(t.title for t in upcoming[:show]),
+                inline=False,
+            )
+
+        await ctx.message.delete()
+        msg = await ctx.send(embed=embed, delete_after=15)
+
+    @queue_command.error
+    async def queue_command_error(self, ctx, exc):
+        if isinstance(exc, QueueIsEmpty):
+            await ctx.message.delete()
+            await ctx.send("Queue is currently empty.", delete_after=5)
 
 
 def setup(bot):
