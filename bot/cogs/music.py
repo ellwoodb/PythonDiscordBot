@@ -4,8 +4,8 @@ import re
 import typing as t
 
 import discord
-from discord import player
 import wavelink
+from discord import player
 from discord.ext import commands
 
 URL_REGEX = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
@@ -39,6 +39,14 @@ class PlayerIsAlreadyPaused(commands.CommandError):
 
 
 class PlayerIsAlreadyPlaying(commands.CommandError):
+    pass
+
+
+class NoMoreTracks(commands.CommandError):
+    pass
+
+
+class NoPreviousTracks(commands.CommandError):
     pass
 
 
@@ -267,6 +275,8 @@ class Music(commands.Cog, wavelink.WavelinkMixin):
     async def play_command(self, ctx, *, query: t.Optional[str]):
         player = self.get_player(ctx)
 
+        await ctx.message.delete()
+
         if not player.is_connected:
             await player.connect(ctx)
 
@@ -278,7 +288,6 @@ class Music(commands.Cog, wavelink.WavelinkMixin):
                 raise QueueIsEmpty
 
             await player.set_pause(False)
-            await ctx.message.delete()
             await ctx.send("Playback resumed.", delete_after=5)
 
         else:
@@ -333,18 +342,55 @@ class Music(commands.Cog, wavelink.WavelinkMixin):
     async def pause_command_error(self, ctx, exc):
         if isinstance(exc, PlayerIsAlreadyPaused):
             await ctx.message.delete()
-            await ctx.send("Playback already paused.")
+            await ctx.send("Playback already paused.", delete_after=5)
         elif isinstance(exc, QueueIsEmpty):
             await ctx.message.delete()
-            await ctx.send("Playback already paused.")
+            await ctx.send("Playback already paused.", delete_after=5)
 
-    @commands.command(name="stop")
+    @commands.command(name="stop", aliases=["clear"])
     async def stop_command(self, ctx):
         player = self.get_player(ctx)
         player.queue.empty()
         await player.stop()
         await ctx.message.delete()
         await ctx.send("Playback stopped and queue cleared.", delete_after=5)
+
+    @commands.command(name="next", aliases=["skip"])
+    async def next_command(self, ctx):
+        player = self.get_player(ctx)
+
+        if not player.queue.upcoming:
+            raise NoMoreTracks
+
+        await player.stop()
+        await ctx.message.delete()
+        await ctx.send("Playing next track.", delete_after=5)
+
+    @next_command.error
+    async def next_command_error(self, ctx, exc):
+        if isinstance(exc, QueueIsEmpty):
+            await ctx.send("Skip could not be excecuted as the queue is empty.", delete_after=5)
+        if isinstance(exc, NoMoreTracks):
+            await ctx.send("There are no more tracks in the queue.", delete_after=5)
+
+    @commands.command(name="previous", aliases=["prev", "back"])
+    async def previous_command(self, ctx):
+        player = self.get_player(ctx)
+
+        if not player.queue.history:
+            raise NoPreviousTracks
+
+        player.queue.position -= 2
+        await player.stop()
+        await ctx.message.delete()
+        await ctx.send("Playing previous track.", delete_after=5)
+
+    @previous_command.error
+    async def next_command_error(self, ctx, exc):
+        if isinstance(exc, QueueIsEmpty):
+            await ctx.send("Previous could not be excecuted as the queue is empty.", delete_after=5)
+        if isinstance(exc, NoMoreTracks):
+            await ctx.send("There are no previous tracks in the queue.", delete_after=5)
 
     @commands.command(name="queue")
     async def queue_command(self, ctx, show: t.Optional[int] = 10):
