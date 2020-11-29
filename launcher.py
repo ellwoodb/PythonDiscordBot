@@ -1,8 +1,8 @@
-from bot import MusicBot
+from bot import Bot
 
 
 def main():
-    bot = MusicBot()
+    bot = Bot()
     bot.run()
 
 

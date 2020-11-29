@@ -1,69 +1,93 @@
+# Name: bot.py
+# Kind: Main bot file
+# Version: 0.1.0
+
 from pathlib import Path
 
 import discord
+from data.keywords import bad_words
 from discord.ext import commands
 
+Version = "v0.1.0"
 
-class MusicBot(commands.Bot):
+
+class Bot(commands.Bot):  # Main bot class
     def __init__(self):
-        self._cogs = [p.stem for p in Path(".").glob("./bot/cogs/*.py")]
+        self._cogs = [p.stem for p in Path(".").glob(
+            "./bot/cogs/*.py")]  # load cogs as a glob
         super().__init__(command_prefix=self.prefix,
-                         case_insensitive=True, intents=discord.Intents.all())
+                         case_insensitive=True, intents=discord.Intents.all())  # Set intends, prefix, etc
 
-    def setup(self):
-        print("Running setup...")
+    # Cog setup
+    def setup(self):  # Triggerd by run
+        print("Running setup...")  # Print running setup
 
-        for cog in self._cogs:
-            self.load_extension(f"bot.cogs.{cog}")
-            print(f" Loaded [{cog}] cog!")
+        for cog in self._cogs:  # Go trough every cog in cogs folder
+            self.load_extension(f"bot.cogs.{cog}")  # Load the cog
+            print(f" Loaded [{cog}] cog!")  # Print cog ready
 
-        print("Setup complete.")
+        print("Setup complete.")  # Print setup complete
 
-    def run(self):
-        self.setup()
+    # Run the bot
+    def run(self):  # Trigger on script start
+        self.setup()  # Run the setup process
 
-        with open("data/token.0", "r", encoding="utf-8") as f:
-            TOKEN = f.read()
+        with open("data/token.0", "r", encoding="utf-8") as f:  # Get the bot's token from "token.0"
+            TOKEN = f.read()  # Define TOKEN as token file read
 
-        print("Running bot.")
-        super().run(TOKEN, reconnect=True)
+        print(f"Running bot [{Version}].")  # Print running
+        super().run(TOKEN, reconnect=True)  # Run bot with TOKEN
 
-    async def shutdown(self):
+    # Shutdown bot
+    async def shutdown(self):  # Trigger on keyboard interrupt
+        # Print closing the connection to the discord servers
         print("Closing connection to Discord...")
-        await super().close()
+        await super().close()  # Close the bot
 
-    async def close(self):
-        print("Closing on keyboard interrupt...")
-        await self.shutdown()
+    # Close bot
+    async def close(self):  # Triggered by shutdown
+        print("Closing on keyboard interrupt...")  # Print closing
+        await self.shutdown()  # Kill bot application
 
-    async def on_connect(self):
+    # When connected to discord
+    async def on_connect(self):  # Trigger on bot connected to discord servers
+        # Print connected and get latecy to discord servers
         print(f" Connected to Discord (latency: {self.latency*1000:,.0f} ms)")
 
-    async def on_resumed(self):
-        print("Bot resumed.")
+    # When bot resumed
+    async def on_resumed(self):  # Trigger on bot resumed
+        print("Bot resumed.")  # Print resumed
 
-    async def on_disconnect(self):
-        print("Bot disconnected.")
+    # When bot disconnected from discord servers
+    async def on_disconnect(self):  # Trigger on disconnect from discord servers
+        print("Bot disconnected.")  # Print disconnected
 
-    # async def on_error(self, err, *args, **kwargs):
-    #     raise
-    #
-    # async def on_command_error(self, ctx, exc):
-    #     raise getattr(exc, "original", exc)
+    # When an error occurs
+    async def on_error(self, err, *args, **kwargs):  # Trigger on error
+        error_channel = self.bot.get_channel(
+            768867099614773358)  # Get error channel by id
+        error_channel.send("An error occured.")  # Log "An error occured"
 
-    async def on_ready(self):
+    # When the bot is ready
+    async def on_ready(self):  # Trigger on bot ready
         self.client_id = (await self.application_info()).id
-        print("Bot ready.")
+        print("Bot ready.")  # Print ready
 
-    async def prefix(self, bot, msg):
-        return commands.when_mentioned_or("*")(bot, msg)
+    # Define the prefix
+    async def prefix(self, bot, msg):  # Define the prefix
+        # TODO: get prefix from a config file
+        return commands.when_mentioned_or("*")(bot, msg)  # Set prefix to "*"
 
-    async def process_commands(self, msg):
+    # Process commands
+    async def process_commands(self, msg):  # Process commands
         ctx = await self.get_context(msg, cls=commands.Context)
 
         if ctx.command is not None:
             await self.invoke(ctx)
 
-    async def on_message(self, msg):
-        if not msg.author.bot:
-            await self.process_commands(msg)
+    # When a message is sent
+    async def on_message(self, msg):  # Trigger on message
+        if not msg.author.bot:  # If the user is not a bot
+            await self.process_commands(msg)  # Process the command
+        else:  # If the user is a bot ignore the command
+            pass
