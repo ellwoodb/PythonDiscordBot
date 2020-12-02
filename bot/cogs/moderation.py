@@ -1,6 +1,6 @@
 # Name: moderation.py
 # Kind: Cog
-# Version: 0.1.0
+# Version: 0.1.1
 
 import discord  # Import the discord API
 from data.embeds import embeds  # Import the embeds
@@ -23,7 +23,8 @@ class Moderation(commands.Cog):  # Create the moderation cog
     @commands.Cog.listener()
     async def on_message(self, msg):  # Trigger on a new message
         for keyword in bad_words:
-            if keyword in msg.content:  # If there is a bad word in the message
+            # If there is a bad word in the message
+            if keyword in str(msg.content).lower():
                 channel = msg.channel  # Define channel the message was sent in
 
                 # Inform the user not to use nad words
@@ -31,21 +32,22 @@ class Moderation(commands.Cog):  # Create the moderation cog
                                    delete_after=5)
                 await msg.delete()  # Delete the message
 
-                # TODO Logging and count user infringements
+                # TODO: User infringements
 
-    # Log message deletes
-    @commands.Cog.listener()
-    async def on_message_delete(self, msg):  # Trigger on a message deletion
-        if msg.author.bot:  # If the message author is a bot do nothing
-            return
+    # # Log message deletes
+    # @commands.Cog.listener()
+    # async def on_message_delete(self, msg):  # Trigger on a message deletion
 
-        msg_delete_embed = embeds.msg_delete(
-            msg, msg.author, msg.channel.id)  # Create the deletion embed
-        log_channel = self.bot.get_channel(
-            777895572660682753)  # Get the log channel from id
+    #     if msg.author.bot:  # If the message author is a bot do nothing
+    #         return
+    #     else:  # If the message author is a human
+    #         msg_delete_embed = embeds.msg_delete(
+    #             msg)  # Create the deletion embed
+    #         log_channel = self.bot.get_channel(
+    #             777895572660682753)  # Get the log channel from id
 
-        # Send the deletion embed to the log channel
-        await log_channel.send(embed=msg_delete_embed)
+    #         # Send the deletion embed to the log channel
+    #         await log_channel.send(embed=msg_delete_embed)
 
     # Kick command
     @commands.command(name="kick")
