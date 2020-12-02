@@ -7,6 +7,7 @@ from pathlib import Path
 import discord
 from data.keywords import bad_words
 from discord.ext import commands
+import os
 
 Version = "v0.1.0"
 
@@ -31,12 +32,10 @@ class Bot(commands.Bot):  # Main bot class
     # Run the bot
     def run(self):  # Trigger on script start
         self.setup()  # Run the setup process
-
-        with open("data/token.0", "r", encoding="utf-8") as f:  # Get the bot's token from "token.0"
-            TOKEN = f.read()  # Define TOKEN as token file read
+        self.token = token = os.getenv("DISCORD_BOT_TOKEN")
 
         print(f"Running bot [{Version}].")  # Print running
-        super().run(TOKEN, reconnect=True)  # Run bot with TOKEN
+        super().run(self.token, reconnect=True)  # Run bot with TOKEN
 
     # Shutdown bot
     async def shutdown(self):  # Trigger on keyboard interrupt
