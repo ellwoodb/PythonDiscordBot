@@ -72,6 +72,10 @@ class Bot(commands.Bot):  # Main bot class
         self.client_id = (await self.application_info()).id
         print("Bot ready.")  # Print ready
 
+        activity = discord.Activity(
+            name='my activity', type=discord.ActivityType.custom)
+        await self.bot.change_presence(activity=activity)
+
     # Define the prefix
     async def prefix(self, bot, msg):  # Define the prefix
         # TODO: get prefix from a config file
