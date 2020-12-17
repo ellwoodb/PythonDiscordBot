@@ -11,6 +11,7 @@ import os
 from configparser import ConfigParser
 
 Version = "v0.1.0"
+Prefix = "*"
 
 
 class Bot(commands.Bot):  # Main bot class
@@ -36,7 +37,8 @@ class Bot(commands.Bot):  # Main bot class
         self.token = token = os.getenv("DISCORD_BOT_TOKEN")
 
         print(f"Running bot [{Version}].")  # Print running
-        super().run(self.token, reconnect=True)  # Run bot with TOKEN
+        super().run("NzY4NTMyNjc1MDYwNDMyOTE2.X5B11A.8haA60u7mAfGBQyvfdvejSqLyLk",
+                    reconnect=True)  # Run bot with TOKEN
 
     # Shutdown bot
     async def shutdown(self):  # Trigger on keyboard interrupt
@@ -73,19 +75,13 @@ class Bot(commands.Bot):  # Main bot class
         self.client_id = (await self.application_info()).id
         print("Bot ready.")  # Print ready
 
-        activity = discord.Activity(
-            name='my activity', type=discord.ActivityType.custom)
-        await self.bot.change_presence(activity=activity)
+        # activity = discord.Activity(
+        #     name='my activity', type=discord.ActivityType.custom)
+        # await self.bot.change_presence(activity=activity)
 
     # Define the prefix
     async def prefix(self, bot, msg):  # Define the prefix
-        config = ConfigParser()
-        path = "../data/config.ini"
-
-        config.read(path)
-        prefix_read = config.get("Bot", "prefix")
-
-        return commands.when_mentioned_or(prefix_read)(bot, msg)
+        return commands.when_mentioned_or(Prefix)(bot, msg)
 
     # Process commands
     async def process_commands(self, msg):  # Process commands
