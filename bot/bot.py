@@ -8,6 +8,7 @@ import discord
 from data.keywords import bad_words
 from discord.ext import commands
 import os
+from configparser import ConfigParser
 
 Version = "v0.1.0"
 
@@ -78,8 +79,13 @@ class Bot(commands.Bot):  # Main bot class
 
     # Define the prefix
     async def prefix(self, bot, msg):  # Define the prefix
-        # TODO: get prefix from a config file
-        return commands.when_mentioned_or("*")(bot, msg)  # Set prefix to "*"
+        config = ConfigParser()
+        path = "../data/config.ini"
+
+        config.read(path)
+        prefix_read = config.get("Bot", "prefix")
+
+        return commands.when_mentioned_or(prefix_read)(bot, msg)
 
     # Process commands
     async def process_commands(self, msg):  # Process commands
