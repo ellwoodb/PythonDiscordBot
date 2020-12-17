@@ -7,7 +7,6 @@
 import datetime as dt  # Import the datetime module as dt
 
 import discord
-from bot.cogs.help import syntax
 from discord.embeds import Embed  # Import the discord API
 from discord.ext import commands  # Import more of the discord API
 
