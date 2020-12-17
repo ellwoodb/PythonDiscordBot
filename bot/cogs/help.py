@@ -1,6 +1,6 @@
 # Name: help.py
 # Kind: Cog
-# Version: 0.0.1
+# Version: 0.1.0
 
 from typing import Optional
 
@@ -70,9 +70,11 @@ class Help(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(name="help")
-    async def show_help(self, ctx, cmd: Optional[str]):
+    async def show_help(self, msg, ctx, cmd: Optional[str]):
         """Shows this message."""
         if cmd is None:
+            await msg.delete()
+
             menu = MenuPages(source=HelpMenu(ctx, list(self.bot.commands)),
                              delete_message_after=True,
                              timeout=60.0)
@@ -80,10 +82,12 @@ class Help(commands.Cog):
 
         else:
             if (command := get(self.bot.commands, name=cmd)):
+                await msg.delete()
                 await self.cmd_help(ctx, command)
 
             else:
-                await ctx.send("That command does not exist.")
+                await msg.delete()
+                await ctx.send("That command does not exist.", delete_after=5)
 
 
 def setup(bot):

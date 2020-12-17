@@ -17,7 +17,7 @@ class Test(commands.Cog):
 
     @commands.command(name="test")
     async def test_command(self, ctx):
-        pass
+        ctx.send("Hello!")
 
 
 def setup(bot):
