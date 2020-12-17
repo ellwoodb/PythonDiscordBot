@@ -1,15 +1,14 @@
 # Name: help.py
 # Kind: Cog
-# Version: 0.1.0
+# Version: 0.1
 
 from typing import Optional
 
-import discord
-from data.embeds import *
-from discord.ext import commands
-from discord.ext.commands.errors import *
+from discord import Embed
 from discord.utils import get
 from discord.ext.menus import MenuPages, ListPageSource
+from discord.ext.commands import Cog
+from discord.ext.commands import command
 
 
 def syntax(command):
@@ -57,7 +56,7 @@ class HelpMenu(ListPageSource):
         return await self.write_page(menu, fields)
 
 
-class Help(commands.Cog):
+class Help(Cog):
     def __init__(self, bot):
         self.bot = bot
         self.bot.remove_command("help")
@@ -69,12 +68,10 @@ class Help(commands.Cog):
         embed.add_field(name="Command description", value=command.help)
         await ctx.send(embed=embed)
 
-    @commands.command(name="help")
-    async def show_help(self, msg, ctx, cmd: Optional[str]):
+    @command(name="help")
+    async def show_help(self, ctx, cmd: Optional[str]):
         """Shows this message."""
         if cmd is None:
-            await msg.delete()
-
             menu = MenuPages(source=HelpMenu(ctx, list(self.bot.commands)),
                              delete_message_after=True,
                              timeout=60.0)
@@ -82,12 +79,10 @@ class Help(commands.Cog):
 
         else:
             if (command := get(self.bot.commands, name=cmd)):
-                await msg.delete()
                 await self.cmd_help(ctx, command)
 
             else:
-                await msg.delete()
-                await ctx.send("That command does not exist.", delete_after=5)
+                await ctx.send("That command does not exist.")
 
 
 def setup(bot):
