@@ -37,8 +37,7 @@ class Bot(commands.Bot):  # Main bot class
         self.token = token = os.getenv("DISCORD_BOT_TOKEN")
 
         print(f"Running bot [{Version}].")  # Print running
-        super().run("NzY4NTMyNjc1MDYwNDMyOTE2.X5B11A.8haA60u7mAfGBQyvfdvejSqLyLk",
-                    reconnect=True)  # Run bot with TOKEN
+        super().run(self.token, reconnect=True)  # Run bot with TOKEN
 
     # Shutdown bot
     async def shutdown(self):  # Trigger on keyboard interrupt
