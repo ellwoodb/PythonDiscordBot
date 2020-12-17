@@ -11,7 +11,7 @@ import os
 from configparser import ConfigParser
 
 Version = "v0.1.0"
-Prefix = "*"
+Prefix = os.getenv("PREFIX")
 
 
 class Bot(commands.Bot):  # Main bot class
