@@ -23,7 +23,8 @@ class Embeds(commands.Cog):
 
     @commands.command(name="embed", aliases=["create", "embeds"])
     async def test_command(self, ctx, msg):
-        
+        pass
+
 
 def setup(bot):
     bot.add_cog(Embeds(bot))
