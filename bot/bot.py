@@ -79,9 +79,9 @@ class Bot(commands.Bot):  # Main bot class
 
         print("Registering slash commands...")
 
-        await manage_commands.add_slash_command(BOT_ID, TOKEN, GUILD_ID, "ping", "Returns the ping of the bot to the discord servers.")
+        await manage_commands.add_slash_command(BOT_ID, TOKEN, GUILD_ID, "ping", "Returns the ping of the bot to the discord servers...")
         print(" Registered [ping] slash command.")
-        await manage_commands.add_slash_command(BOT_ID, TOKEN, GUILD_ID, "add", "Returns the result of a addition.", options=["number1", "number2"])
+        await manage_commands.add_slash_command(BOT_ID, TOKEN, GUILD_ID, "add", "Returns the result of a addition.", options=["Value1", "Value2"])
         print(" Registered [add] slash command.")
 
         print("Done registering slash commands.")
