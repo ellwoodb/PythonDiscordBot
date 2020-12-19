@@ -2,23 +2,27 @@
 # Kind: Main bot file
 # Version: 0.1.0
 
+import os
+from configparser import ConfigParser
 from pathlib import Path
 
 import discord
 from data.keywords import bad_words
 from discord.ext import commands
-import os
-from configparser import ConfigParser
+from discord_slash.utils import manage_commands
 
-Version = "v0.1.0"
-Prefix = os.getenv("PREFIX")
+VERSION = os.getenv("DISCORD_BOT_VERSION")
+PREFIX = os.getenv("DISCORD_BOT_PREFIX")
+TOKEN = os.getenv("DISCORD_BOT_TOKEN")
+BOT_ID = int(os.getenv("DISCORD_BOT_ID"))
+GUILD_ID = int(os.getenv("DISCORD_BOT_GUILD_ID"))
 
 
 class Bot(commands.Bot):  # Main bot class
     def __init__(self):
         self._cogs = [p.stem for p in Path(".").glob(
             "./bot/cogs/*.py")]  # load cogs as a glob
-        super().__init__(command_prefix=self.prefix,
+        super().__init__(command_prefix=PREFIX,
                          case_insensitive=True, intents=discord.Intents.all())  # Set intends, prefix, etc
 
     # Cog setup
@@ -34,9 +38,9 @@ class Bot(commands.Bot):  # Main bot class
     # Run the bot
     def run(self):  # Trigger on script start
         self.setup()  # Run the setup process
-        self.token = token = os.getenv("DISCORD_BOT_TOKEN")
+        self.token = TOKEN
 
-        print(f"Running bot [{Version}].")  # Print running
+        print(f"Running bot [v{VERSION}].")  # Print running
         super().run(self.token, reconnect=True)  # Run bot with TOKEN
 
     # Shutdown bot
@@ -72,6 +76,13 @@ class Bot(commands.Bot):  # Main bot class
     # When the bot is ready
     async def on_ready(self):  # Trigger on bot ready
         self.client_id = (await self.application_info()).id
+
+        print(" Registering slash commands...")
+
+        await manage_commands.add_slash_command(BOT_ID, TOKEN, GUILD_ID, "ping", "Returns the ping of the bot to the discord servers.")
+
+        print(" Done registering slash commands.")
+
         print("Bot ready.")  # Print ready
 
         # activity = discord.Activity(
@@ -80,7 +91,7 @@ class Bot(commands.Bot):  # Main bot class
 
     # Define the prefix
     async def prefix(self, bot, msg):  # Define the prefix
-        return commands.when_mentioned_or(Prefix)(bot, msg)
+        return commands.when_mentioned_or(PREFIX)(bot, msg)
 
     # Process commands
     async def process_commands(self, msg):  # Process commands
