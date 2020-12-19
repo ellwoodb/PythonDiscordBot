@@ -16,7 +16,7 @@ def syntax(command):
     params = []
 
     for key, value in command.params.items():
-        if key not in ("self", "ctx"):
+        if key not in ("self", "ctx", "msg"):
             params.append(f"[{key}]" if "NoneType" in str(
                 value) else f"<{key}>")
 
