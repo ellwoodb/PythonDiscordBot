@@ -23,7 +23,7 @@ class Slash(commands.Cog):
             await ctx.send(content=f"Pong! (`{round(bot.latency*1000)}`ms)")
 
         @self.slash.slash(name="calculator")
-        async def add_slash(ctx, number1, number2):
+        async def add_slash(ctx, mode, number1, number2):
             print("lol")
 
 
