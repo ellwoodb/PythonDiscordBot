@@ -5,6 +5,8 @@
 import os
 from configparser import ConfigParser
 from pathlib import Path
+from aiohttp.client import request
+import requests
 
 import discord
 from data.keywords import bad_words
@@ -76,16 +78,6 @@ class Bot(commands.Bot):  # Main bot class
     # When the bot is ready
     async def on_ready(self):  # Trigger on bot ready
         self.client_id = (await self.application_info()).id
-
-        print("Registering slash commands...")
-
-        await manage_commands.add_slash_command(BOT_ID, TOKEN, GUILD_ID, "ping", "Returns the ping of the bot to the discord servers...")
-        print(" Registered [ping] slash command.")
-        await manage_commands.add_slash_command(BOT_ID, TOKEN, GUILD_ID, "add", "Returns the result of a addition.", options=["Value1", "Value2"])
-        print(" Registered [add] slash command.")
-
-        print("Done registering slash commands.")
-
         print("Bot ready.")  # Print ready
 
         # activity = discord.Activity(

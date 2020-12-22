@@ -4,3 +4,5 @@ __pycache__
 OLD
 .vscode
 log.txt
+slash_commands.py
+secret.txt
