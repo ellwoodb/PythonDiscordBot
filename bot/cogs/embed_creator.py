@@ -22,8 +22,17 @@ class Embeds(commands.Cog):
         self.bot = bot
 
     @commands.command(name="embed", aliases=["create", "embeds"])
-    async def test_command(self, ctx, msg):
-        pass
+    async def create_embed_command(self, ctx, msg, color, embed_content):
+        if color in colors:
+            color_index = colors.index(color)
+            global color_code
+            color_code = color_codes[int(color_index)]
+        embed = discord.Embed(
+            color=int(color_code),
+            timestamp=dt.datetime.utcnow(),
+            description=embed_content
+        )
+        ctx.send(embed=embed)
 
 
 def setup(bot):
