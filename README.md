@@ -1,6 +1,8 @@
 # PythonDiscordBot
 A moderate Discord Bot, written in Discord.py
 
+## This Repo is ARCHIVED because it's no longer maintained
+
 ### Commands:
 - Calculator
 - Help
